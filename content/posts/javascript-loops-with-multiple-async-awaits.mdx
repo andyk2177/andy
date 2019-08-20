@@ -38,7 +38,7 @@ const newUsers = await users.map(async user => {
 })
 ```
 
-...which, unfortunately, did not do anything. That is because `map()` actually returns a brand new array when it is done and so it `newUsers` is actually going to be an array of `Promises` so we can't really wait an array.
+...which, unfortunately, did not do anything. That is because `map()` actually returns a brand new array when it is done and so `newUsers` is actually going to be an array of `Promises` so I can't really await an array.
 
 To fix it I just needed to change my code to this:
 
@@ -72,7 +72,7 @@ which complicates things.
 
 ## for...of to the rescue!
 
-So, turns out a simple for loop would have solved all our issues from the start but they aren't the most ergonomic code blocks to look at ever:
+So, turns out a simple for loop would have solved all our issues from the start but they aren't the most aesthetic code blocks to look at ever:
 
 ```javascript
 for (let index = 0; index < users.length; index++) {

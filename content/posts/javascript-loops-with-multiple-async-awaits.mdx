@@ -1,0 +1,111 @@
+---
+title: Javascript Loops With Multiple Async Awaits
+date: 2019-08-19
+---
+
+I recently had to write a script that allowed a large `csv` file to be uploaded to a `node.js` server, which would then read the file and loop over the rows (values). Each row had data that needed to be stored in a database and in `node.js` land you want those calls to be asynchronous. I do a lot of looping over arrays of objects on the frontend in `JSX` with `map()` like this:
+
+```jsx
+const users = [
+  { name: "Andy", email: "andykay.me@gmail.com" },
+  { name: "Jerry", email: "jerry@seinfeld.com" },
+]
+
+export default () => (
+  <div>
+    {users.map(user => (
+      <div>
+        Name: {user.name} ({user.email})
+      </div>
+    ))}
+  </div>
+)
+```
+
+So I naively reached for my Javascript looping function of choice again to try and do this:
+
+```javascript
+const users = [
+  { name: "Andy", email: "andykay.me@gmail.com" },
+  { name: "Jerry", email: "jerry@seinfeld.com" },
+]
+
+const newUsers = await users.map(async user => {
+  const newUser = await asyncMysqlClient.createUser({
+    name: user.name,
+    email: user.email,
+  })
+})
+```
+
+...which, unfortunately, did not do anything. That is because `map()` actually returns a brand new array when it is done and so it `newUsers` is actually going to be an array of `Promises` so we can't really wait an array.
+
+To fix it I just needed to change my code to this:
+
+```javascript
+const users = [
+  { name: "Andy", email: "andykay.me@gmail.com" },
+  { name: "Jerry", email: "jerry@seinfeld.com" },
+]
+
+const promises = users.map(async user => {
+  const newUser = await asyncMysqlClient.createUser({
+    name: user.name,
+    email: user.email,
+  })
+})
+
+const results = await Promise.all(promises)
+```
+
+Yay! Async code now working in a map loop! But, that is only for one async call. I actually needed to do multiple async calls inside the same loop and doing that would not be so easy because then you would be returning an array of arrays of promises like this pseudo code:
+
+```javascript
+const promises = [
+  [Promise1, Promies2, Promise3],
+  [Promise1, Promies2, Promise3],
+  [Promise1, Promies2, Promise3],
+]
+```
+
+which complicates things.
+
+## for...of to the rescue!
+
+So, turns out a simple for loop would have solved all our issues from the start but they aren't the most ergonomic code blocks to look at ever:
+
+```javascript
+for (let index = 0; index < users.length; index++) {
+  // first async call
+  const newUser = await asyncMysqlClient.createUser({
+    name: user.name,
+    email: user.email,
+  })
+
+  // second async call
+  const newCourse = await asyncMysqlClient.createCourse({
+    name: user.course.name,
+    title: user.course.title,
+  })
+}
+```
+
+A much sleeker ES6 way of doing things can be accomplished by using `for...of`:
+
+```javascript
+for (const user of users) {
+  // first async call
+  const newUser = await asyncMysqlClient.createUser({
+    name: user.name,
+    email: user.email,
+  })
+
+  // second async call
+  const newCourse = await asyncMysqlClient.createCourse({
+    name: user.course.name,
+    title: user.course.title,
+  })
+}
+```
+
+And there you have it! A nice modern way of handling multiple async await calls in a loop.

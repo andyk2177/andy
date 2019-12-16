@@ -21,11 +21,11 @@ module.exports = {
     social: [
       {
         name: `twitter`,
-        url: `https://twitter.com/andyk2177`,
+        url: `https://twitter.com/iamandyk`,
       },
       {
         name: `github`,
-        url: `https://github.com/andyk2177`,
+        url: `https://github.com/iamandyk`,
       },
     ],
   },
